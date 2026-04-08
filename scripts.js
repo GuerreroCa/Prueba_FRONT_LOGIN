@@ -76,8 +76,23 @@ function interpretApiSuccess(payload, fallback) {
   if (apiMessage.includes('profile')) {
     return 'Perfil cargado correctamente.';
   }
+  if (apiMessage.includes('accedido exitosamente') || apiMessage.includes('zona protegida')) {
+    return 'Acceso a la zona protegida verificado. Tu token es válido.';
+  }
 
   return fallback;
+}
+
+function setLoading(isLoading) {
+  if (isLoading) {
+    showMessage('Cargando...', false);
+    const resultOutput = document.getElementById('result-output');
+    const adminOutput = document.getElementById('admin-output');
+    if (resultOutput) resultOutput.textContent = 'Cargando...';
+    if (adminOutput) adminOutput.textContent = 'Cargando...';
+  } else {
+    showMessage('');
+  }
 }
 
 async function request(url, options = {}) {
@@ -101,7 +116,7 @@ async function handleLogin(event) {
   }
 
   try {
-    const data = await request('/api/auth/login', {
+    const data = await request('/api/Auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -129,7 +144,7 @@ async function handleRegister(event) {
   }
 
   try {
-    const data = await request('/api/auth/register', {
+    const data = await request('/api/Auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password, confirmPassword })
@@ -147,38 +162,47 @@ function redirectToLogin() {
 }
 
 async function loadProfile() {
+  setLoading(true);
   try {
-    const data = await request('/api/users/profile', {
+    const data = await request('/api/Users/profile', {
       method: 'GET',
       headers: authHeaders()
     });
     renderOutput(data);
   } catch (error) {
     renderOutput({ error: error.message });
+  } finally {
+    setLoading(false);
   }
 }
 
 async function loadProtectedZone() {
+  setLoading(true);
   try {
-    const data = await request('/api/users/protected-zone', {
+    await request('/api/Users/protected-zone', {
       method: 'GET',
       headers: authHeaders()
     });
-    renderOutput({ success: true, action: 'protected-zone' });
+    renderOutput({ action: 'protected-zone' });
   } catch (error) {
     renderOutput({ error: error.message });
+  } finally {
+    setLoading(false);
   }
 }
 
 async function loadAdminZone() {
+  setLoading(true);
   try {
-    const data = await request('/api/users/admin-zone', {
+    const data = await request('/api/Users/admin-zone', {
       method: 'GET',
       headers: authHeaders()
     });
     renderAdminOutput(data);
   } catch (error) {
     renderAdminOutput({ error: error.message });
+  } finally {
+    setLoading(false);
   }
 }
 
@@ -191,34 +215,35 @@ function renderOutput(data) {
     return;
   }
 
+  if (data.customMessage) {
+    output.textContent = data.customMessage;
+    return;
+  }
+
   if (data.action === 'protected-zone') {
     output.textContent = 'Acceso a la zona protegida verificado. Tu token es válido.';
     return;
   }
 
   if (data.id !== undefined) {
-    output.textContent = JSON.stringify({
-      mensaje: 'Perfil cargado correctamente.',
-      perfil: {
-        id: data.id,
-        nombre: data.name,
-        email: data.email,
-        creadoEn: data.createdAt
-      }
-    }, null, 2);
+    output.textContent = `Perfil cargado correctamente.\nID: ${data.id}\nNombre: ${data.name || '-'}\nEmail: ${data.email || '-'}\nCreado en: ${data.createdAt || '-'}`;
     return;
   }
 
-  const display = {
-    mensaje: interpretApiSuccess(data, 'Operación completada correctamente.'),
-    usuario: {
-      id: data.userId,
-      nombre: data.name,
-      email: data.email
-    }
-  };
+  let message = interpretApiSuccess(data, 'Operación completada correctamente.');
 
-  output.textContent = JSON.stringify(display, null, 2);
+  if (data.userId !== undefined || data.name || data.email) {
+    const usuario = [
+      data.userId !== undefined ? `ID: ${data.userId}` : null,
+      data.name ? `Nombre: ${data.name}` : null,
+      data.email ? `Email: ${data.email}` : null
+    ].filter(Boolean).join('\n');
+
+    output.textContent = `${message}${usuario ? `\n\nUsuario:\n${usuario}` : ''}`;
+    return;
+  }
+
+  output.textContent = message;
 }
 
 function renderAdminOutput(data) {
@@ -230,18 +255,32 @@ function renderAdminOutput(data) {
     return;
   }
 
-  output.textContent = JSON.stringify({
-    mensaje: interpretApiSuccess(data, 'Zona admin cargada correctamente.'),
-    admin: {
-      usuario: {
-        id: data.userId,
-        nombre: data.name,
-        email: data.email
-      },
-      estadisticas: data.stats,
-      accedidoEn: data.accessedAt
-    }
-  }, null, 2);
+  const lines = [];
+  lines.push(interpretApiSuccess(data, 'Zona admin cargada correctamente.'));
+
+  if (data.userId !== undefined || data.name || data.email) {
+    lines.push('');
+    lines.push('Usuario:');
+    if (data.userId !== undefined) lines.push(`  ID: ${data.userId}`);
+    if (data.name) lines.push(`  Nombre: ${data.name}`);
+    if (data.email) lines.push(`  Email: ${data.email}`);
+  }
+
+  if (data.stats) {
+    lines.push('');
+    lines.push('Estadísticas:');
+    lines.push(`  Total usuarios: ${data.stats.totalUsers ?? '-'} `);
+    lines.push(`  Usuarios activos: ${data.stats.activeUsers ?? '-'} `);
+    lines.push(`  Admins: ${data.stats.adminUsers ?? '-'} `);
+    if (data.stats.updatedAt) lines.push(`  Actualizado: ${data.stats.updatedAt}`);
+  }
+
+  if (data.accessedAt) {
+    lines.push('');
+    lines.push(`Accedido en: ${data.accessedAt}`);
+  }
+
+  output.textContent = lines.join('\n');
 }
 
 function initLoginPage() {
@@ -267,7 +306,7 @@ function initDashboardPage() {
   document.getElementById('btn-admin')?.addEventListener('click', () => window.location.href = 'admin.html');
   document.getElementById('btn-logout')?.addEventListener('click', redirectToLogin);
 
-  renderOutput({ message: 'Token cargado. Presiona un botón para consultar la API.' });
+  renderOutput({ customMessage: 'Token cargado. Presiona un botón para consultar la API.' });
 }
 
 function initAdminPage() {
