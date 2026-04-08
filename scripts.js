@@ -30,14 +30,63 @@ function authHeaders() {
   };
 }
 
+function interpretApiError(payload, status) {
+  const apiMessage = String(payload?.message || '').toLowerCase();
+
+  if (status === 401) return 'No estás autorizado. Inicia sesión de nuevo.';
+  if (status === 403) return 'No tienes permiso para acceder a este recurso.';
+  if (status === 404) return 'No se encontró el recurso solicitado.';
+  if (status >= 500) return 'Error del servidor. Intenta de nuevo más tarde.';
+
+  if (apiMessage.includes('invalid credentials') || apiMessage.includes('credenciales inválidas') || apiMessage.includes('credenciales')) {
+    return 'Email o contraseña incorrectos. Verifica tus datos.';
+  }
+
+  if (apiMessage.includes('user already exists') || apiMessage.includes('ya existe')) {
+    return 'Ya existe un usuario registrado con ese correo.';
+  }
+
+  if (apiMessage.includes('passwords do not match') || apiMessage.includes('no coinciden')) {
+    return 'Las contraseñas no coinciden. Revísalas e inténtalo otra vez.';
+  }
+
+  if (apiMessage.includes('token') && apiMessage.includes('expired')) {
+    return 'La sesión expiró. Inicia sesión de nuevo.';
+  }
+
+  if (apiMessage.includes('token') && apiMessage.includes('invalid')) {
+    return 'El token es inválido. Vuelve a iniciar sesión.';
+  }
+
+  return 'Ocurrió un error. Intenta de nuevo.';
+}
+
+function interpretApiSuccess(payload, fallback) {
+  const apiMessage = String(payload?.message || '').toLowerCase();
+
+  if (apiMessage.includes('register') || apiMessage.includes('registrado')) {
+    return 'Registro completado con éxito.';
+  }
+  if (apiMessage.includes('login') || apiMessage.includes('inició sesión')) {
+    return 'Has iniciado sesión correctamente.';
+  }
+  if (apiMessage.includes('admin')) {
+    return 'Datos de administración cargados correctamente.';
+  }
+  if (apiMessage.includes('profile')) {
+    return 'Perfil cargado correctamente.';
+  }
+
+  return fallback;
+}
+
 async function request(url, options = {}) {
   const response = await fetch(`${API_BASE_URL}${url}`, options);
-  const payload = await response.json().catch(() => ({}));
+  const payload = await response.json().catch(() => null);
   if (!response.ok) {
-    const message = payload.message || 'Error en la solicitud';
-    throw new Error(`${response.status} - ${message}`);
+    throw new Error(interpretApiError(payload, response.status));
   }
-  return payload;
+  return payload || {};
 }
 
 async function handleLogin(event) {
@@ -86,7 +135,7 @@ async function handleRegister(event) {
       body: JSON.stringify({ name, email, password, confirmPassword })
     });
 
-    showMessage(`Registro exitoso: ${data.message}`);
+    showMessage('Registro exitoso. Ya puedes iniciar sesión.');
   } catch (error) {
     showMessage(error.message, true);
   }
@@ -115,7 +164,7 @@ async function loadProtectedZone() {
       method: 'GET',
       headers: authHeaders()
     });
-    renderOutput(data);
+    renderOutput({ success: true, action: 'protected-zone' });
   } catch (error) {
     renderOutput({ error: error.message });
   }
@@ -136,13 +185,63 @@ async function loadAdminZone() {
 function renderOutput(data) {
   const output = document.getElementById('result-output');
   if (!output) return;
-  output.textContent = JSON.stringify(data, null, 2);
+
+  if (data.error) {
+    output.textContent = data.error;
+    return;
+  }
+
+  if (data.action === 'protected-zone') {
+    output.textContent = 'Acceso a la zona protegida verificado. Tu token es válido.';
+    return;
+  }
+
+  if (data.id !== undefined) {
+    output.textContent = JSON.stringify({
+      mensaje: 'Perfil cargado correctamente.',
+      perfil: {
+        id: data.id,
+        nombre: data.name,
+        email: data.email,
+        creadoEn: data.createdAt
+      }
+    }, null, 2);
+    return;
+  }
+
+  const display = {
+    mensaje: interpretApiSuccess(data, 'Operación completada correctamente.'),
+    usuario: {
+      id: data.userId,
+      nombre: data.name,
+      email: data.email
+    }
+  };
+
+  output.textContent = JSON.stringify(display, null, 2);
 }
 
 function renderAdminOutput(data) {
   const output = document.getElementById('admin-output');
   if (!output) return;
-  output.textContent = JSON.stringify(data, null, 2);
+
+  if (data.error) {
+    output.textContent = data.error;
+    return;
+  }
+
+  output.textContent = JSON.stringify({
+    mensaje: interpretApiSuccess(data, 'Zona admin cargada correctamente.'),
+    admin: {
+      usuario: {
+        id: data.userId,
+        nombre: data.name,
+        email: data.email
+      },
+      estadisticas: data.stats,
+      accedidoEn: data.accessedAt
+    }
+  }, null, 2);
 }
 
 function initLoginPage() {
