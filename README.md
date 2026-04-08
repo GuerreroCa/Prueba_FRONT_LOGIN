@@ -50,16 +50,18 @@ PRUEBA_FRONT_LOGIN/
 
 ### Dashboard de usuario
 
-- Consume `GET /api/users/profile`.
-- Consume `GET /api/users/protected-zone`.
+- Consume `GET /api/Users/profile`.
+- Consume `GET /api/Users/protected-zone`.
 - Permite cerrar sesión.
 - Navega al admin dashboard cuando el usuario lo solicita.
+- Usa un contenedor de mensajes (`message-box`) para mostrar estados y errores de forma consistente.
 
 ### Admin Dashboard
 
-- Consume `GET /api/users/admin-zone`.
+- Consume `GET /api/Users/admin-zone`.
 - Muestra estadísticas de usuarios retornadas por la API.
 - Disponible solo para usuarios con rol `admin`.
+- Usa el mismo contenedor de mensajes para mostrar estados y errores.
 
 ## Configuración de la API
 
@@ -75,6 +77,7 @@ Si el backend corre en otra dirección o puerto, actualiza ese valor.
 
 - El frontend es puro HTML/CSS/JS sin frameworks.
 - Se utiliza `fetch` para comunicarse con la API.
+- No se muestran directamente los mensajes crudos de la API; se interpretan y se presentan como textos amigables.
 - El token JWT se almacena en `localStorage` para mantener la sesión.
 - Las llamadas protegidas incluyen el header `Authorization: Bearer {token}`.
 
