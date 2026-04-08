@@ -84,6 +84,11 @@ function interpretApiSuccess(payload, fallback) {
 }
 
 function setLoading(isLoading) {
+  const spinner = document.getElementById('spinner');
+  if (spinner) {
+    spinner.classList.toggle('hidden', !isLoading);
+  }
+
   if (isLoading) {
     showMessage('Cargando...', false);
     const resultOutput = document.getElementById('result-output');
@@ -96,12 +101,20 @@ function setLoading(isLoading) {
 }
 
 async function request(url, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${url}`, options);
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    throw new Error(interpretApiError(payload, response.status));
+  try {
+    const response = await fetch(`${API_BASE_URL}${url}`, options);
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      throw new Error(interpretApiError(payload, response.status));
+    }
+    return payload || {};
+  } catch (error) {
+    const message = String(error?.message || '').toLowerCase();
+    if (error instanceof TypeError || message.includes('failed to fetch') || message.includes('networkerror')) {
+      throw new Error('No se pudo conectar al servidor. Verifica tu conexión o la URL de la API.');
+    }
+    throw error;
   }
-  return payload || {};
 }
 
 async function handleLogin(event) {
@@ -116,6 +129,7 @@ async function handleLogin(event) {
   }
 
   try {
+    setLoading(true);
     const data = await request('/api/Auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -127,6 +141,8 @@ async function handleLogin(event) {
     setTimeout(() => window.location.href = 'dashboard.html', 800);
   } catch (error) {
     showMessage(error.message, true);
+  } finally {
+    setLoading(false);
   }
 }
 
@@ -144,6 +160,7 @@ async function handleRegister(event) {
   }
 
   try {
+    setLoading(true);
     const data = await request('/api/Auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -153,6 +170,8 @@ async function handleRegister(event) {
     showMessage('Registro exitoso. Ya puedes iniciar sesión.');
   } catch (error) {
     showMessage(error.message, true);
+  } finally {
+    setLoading(false);
   }
 }
 

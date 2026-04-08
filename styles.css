@@ -125,6 +125,35 @@ button.danger {
   color: #e0f2fe;
 }
 
+.spinner {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 15, 39, 0.75);
+  z-index: 999;
+}
+
+.spinner.hidden {
+  display: none;
+}
+
+.loader {
+  width: 52px;
+  height: 52px;
+  border: 6px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 pre {
   margin: 0;
   white-space: pre-wrap;

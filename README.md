@@ -78,6 +78,7 @@ Si el backend corre en otra dirección o puerto, actualiza ese valor.
 - El frontend es puro HTML/CSS/JS sin frameworks.
 - Se utiliza `fetch` para comunicarse con la API.
 - No se muestran directamente los mensajes crudos de la API; se interpretan y se presentan como textos amigables.
+- Se muestra un spinner global mientras se espera la respuesta del servidor.
 - El token JWT se almacena en `localStorage` para mantener la sesión.
 - Las llamadas protegidas incluyen el header `Authorization: Bearer {token}`.
 
