@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Prueba Front Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-container">
+    <header>
+      <h1>Admin Dashboard</h1>
+      <p>Vista exclusiva para usuarios admin. Se solicita el endpoint admin-zone.</p>
+    </header>
+
+    <section class="dashboard-actions">
+      <button id="btn-refresh-admin">Actualizar datos</button>
+      <button id="btn-back">Volver al dashboard</button>
+      <button id="btn-logout" class="danger">Cerrar sesión</button>
+    </section>
+
+    <section class="card full-card">
+      <h2>Estadísticas de administración</h2>
+      <pre id="admin-output">Cargando datos de admin...</pre>
+    </section>
+  </main>
+
+  <script src="scripts.js"></script>
+</body>
+</html>

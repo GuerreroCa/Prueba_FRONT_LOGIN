@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prueba Front Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-container">
+    <header>
+      <h1>Prueba Front Login</h1>
+      <p>Interfaz para autenticar con la API de login y administrar acceso seguro.</p>
+    </header>
+
+    <section class="cards-grid">
+      <article class="card">
+        <h2>Login</h2>
+        <form id="login-form">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" name="email" placeholder="admin@example.com" required />
+
+          <label for="login-password">Contraseña</label>
+          <input id="login-password" type="password" name="password" placeholder="Admin@123" required />
+
+          <button type="submit">Iniciar sesión</button>
+        </form>
+      </article>
+
+      <article class="card">
+        <h2>Registro</h2>
+        <form id="register-form">
+          <label for="register-name">Nombre completo</label>
+          <input id="register-name" type="text" name="name" placeholder="Juan Pérez" required />
+
+          <label for="register-email">Email</label>
+          <input id="register-email" type="email" name="email" placeholder="juan@example.com" required />
+
+          <label for="register-password">Contraseña</label>
+          <input id="register-password" type="password" name="password" placeholder="Contraseña segura" required />
+
+          <label for="register-confirm-password">Confirmar contraseña</label>
+          <input id="register-confirm-password" type="password" name="confirmPassword" placeholder="Repite la contraseña" required />
+
+          <button type="submit">Registrar usuario</button>
+        </form>
+      </article>
+    </section>
+
+    <div class="note-box">
+      <p>Si ya estás autenticado, serás redirigido automáticamente al dashboard.</p>
+    </div>
+
+    <div id="message-box" class="message"></div>
+  </main>
+
+  <script src="scripts.js"></script>
+</body>
+</html>

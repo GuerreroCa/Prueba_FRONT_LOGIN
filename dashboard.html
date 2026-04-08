@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard - Prueba Front Login</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page-container">
+    <header>
+      <h1>Dashboard de usuario</h1>
+      <p>Zona protegida: aquí puedes llamar a la API para validar tu token.</p>
+    </header>
+
+    <section class="dashboard-actions">
+      <button id="btn-profile">Cargar perfil</button>
+      <button id="btn-protected">Zona protegida</button>
+      <button id="btn-admin">Ir a admin dashboard</button>
+      <button id="btn-logout" class="danger">Cerrar sesión</button>
+    </section>
+
+    <section class="card full-card">
+      <h2>Resultados</h2>
+      <pre id="result-output">Presiona un botón para consultar la API.</pre>
+    </section>
+
+    <div class="note-box">
+      <p>La sesión se guarda en <strong>localStorage</strong> usando el token JWT.</p>
+    </div>
+  </main>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
