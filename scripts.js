@@ -128,6 +128,8 @@ async function handleLogin(event) {
     return;
   }
 
+  let shouldKeepLoading = false;
+
   try {
     setLoading(true);
     const data = await request('/api/Auth/login', {
@@ -138,11 +140,14 @@ async function handleLogin(event) {
 
     saveToken(data.token);
     showMessage('Login exitoso. Redirigiendo al dashboard...');
+    shouldKeepLoading = true;
     setTimeout(() => window.location.href = 'dashboard.html', 800);
   } catch (error) {
     showMessage(error.message, true);
   } finally {
-    setLoading(false);
+    if (!shouldKeepLoading) {
+      setLoading(false);
+    }
   }
 }
 
